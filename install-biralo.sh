@@ -1,58 +1,71 @@
 #!/bin/bash
 
-# Simple color setup
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-RESET='\033[0m'
-BOLD='\033[1m'
+# Color codes that work in most terminals
+RED='\e[31m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+CYAN='\e[36m'
+MAGENTA='\e[35m'
+BOLD='\e[1m'
+RESET='\e[0m'
 
-# Clear screen
 clear
 
-# Cool title
+# Aesthetic header
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════╗"
-echo "║          Installing Biralo           ║"
+echo "║         🚀  B I R A L O  ⚡           ║"
 echo "╚══════════════════════════════════════╝"
 echo -e "${RESET}"
 
-# Installing dependencies
-echo -e "${YELLOW}Installing dependencies...${RESET}"
+# Step 1: Install base packages
+echo -e "${YELLOW}🔧 Installing required packages...${RESET}"
 sudo apt update -y >/dev/null 2>&1
-sudo apt install -y python3 python3-pip git figlet >/dev/null 2>&1
+sudo apt install -y python3 python3-pip git -y >/dev/null 2>&1
+echo -e "${GREEN}✅ System dependencies installed.${RESET}"
 
-# Optional: Fancy banner
-if command -v figlet >/dev/null; then
-    figlet Biralo
-else
-    echo -e "${BOLD}${CYAN}BIRALO${RESET}"
-fi
-
-# Clone repo
-echo -e "\n${CYAN}Cloning project...${RESET}"
-git clone https://github.com/PowerEdgeR710/discord-vps-creator.git >/dev/null 2>&1
+# Step 2: Install discord.py
+echo -e "${YELLOW}📦 Installing Python modules...${RESET}"
+pip3 install -U discord.py >/dev/null 2>&1
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Failed to clone repo.${RESET}"
+    echo -e "${RED}❌ Failed to install discord.py. Check Python setup.${RESET}"
+    exit 1
+fi
+echo -e "${GREEN}✅ discord.py installed.${RESET}"
+
+# Step 3: Clone repo
+echo -e "${YELLOW}📁 Cloning Biralo project...${RESET}"
+git clone https://github.com/PowerEdgeR710/discord-vps-creator.git >/dev/null 2>&1
+
+if [ ! -d "discord-vps-creator" ]; then
+    echo -e "${RED}❌ Failed to clone repository. Check your internet.${RESET}"
     exit 1
 fi
 
-cd discord-vps-creator || { echo -e "${RED}❌ Couldn't enter folder.${RESET}"; exit 1; }
+cd discord-vps-creator || exit 1
+echo -e "${GREEN}✅ Repo cloned successfully.${RESET}"
 
-# Ask for token
-echo -ne "\n${YELLOW}Enter your Discord Bot Token: ${RESET}"
+# Step 4: Ask for bot token
+echo -ne "${CYAN}🤖 Enter your Discord Bot Token: ${RESET}"
 read -r BOT_TOKEN
 
-# Inject into v2.py
+# Step 5: Insert token into v2.py
 if grep -q "^TOKEN=" v2.py; then
-    sed -i "s|^TOKEN=.*|TOKEN='$BOT_TOKEN'|" v2.py
+    sed -i "s|^TOKEN=.*|TOKEN='${BOT_TOKEN}'|" v2.py
 else
-    echo "TOKEN='$BOT_TOKEN'" >> v2.py
+    echo "TOKEN='${BOT_TOKEN}'" >> v2.py
 fi
+echo -e "${GREEN}✅ Token saved to v2.py${RESET}"
 
-# Done, run it
-echo -e "\n${GREEN}✅ All done! Starting Biralo bot now...${RESET}"
+# Final Step: Start bot
+echo -e "\n${MAGENTA}${BOLD}🚀 Starting Biralo bot...${RESET}"
 sleep 1
 python3 v2.py
+
+# Optional: If bot fails
+if [ $? -ne 0 ]; then
+    echo -e "\n${RED}❌ Bot failed to start. Make sure your token is valid.${RESET}"
+else
+    echo -e "\n${GREEN}✅ Biralo bot is now running!${RESET}"
+fi

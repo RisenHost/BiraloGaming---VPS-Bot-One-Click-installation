@@ -18,4 +18,5 @@
 You can install and set up BiraloGaming Discord VPS Creator with one command:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/YourUsername/your-repo/main/install-biralo.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/RisenHost/Bolthosting-Node/main/install-biralo.sh)"
+

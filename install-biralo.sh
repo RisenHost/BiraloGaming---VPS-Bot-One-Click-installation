@@ -1,85 +1,58 @@
 #!/bin/bash
 
-# Terminal color codes
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-YELLOW="\033[1;33m"
-CYAN="\033[0;36m"
-MAGENTA="\033[0;35m"
-BOLD="\033[1m"
-RESET="\033[0m"
+# Simple color setup
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RESET='\033[0m'
+BOLD='\033[1m'
 
-# Function to print slow text
-slow_print() {
-  local text="$1"
-  local delay=0.04
-  for (( i=0; i<${#text}; i++ )); do
-    printf "${text:$i:1}"
-    sleep $delay
-  done
-  printf "\n"
-}
-
+# Clear screen
 clear
 
-# Show banner
-if command -v figlet &>/dev/null; then
-  if command -v lolcat &>/dev/null; then
-    figlet -f slant "Biralo" | lolcat
-  else
-    figlet -f slant "Biralo"
-  fi
+# Cool title
+echo -e "${CYAN}${BOLD}"
+echo "╔══════════════════════════════════════╗"
+echo "║          Installing Biralo           ║"
+echo "╚══════════════════════════════════════╝"
+echo -e "${RESET}"
+
+# Installing dependencies
+echo -e "${YELLOW}Installing dependencies...${RESET}"
+sudo apt update -y >/dev/null 2>&1
+sudo apt install -y python3 python3-pip git figlet >/dev/null 2>&1
+
+# Optional: Fancy banner
+if command -v figlet >/dev/null; then
+    figlet Biralo
 else
-  echo -e "${MAGENTA}${BOLD}*** BIRALO ***${RESET}"
+    echo -e "${BOLD}${CYAN}BIRALO${RESET}"
 fi
-
-echo -e "\n${YELLOW}${BOLD}🔥 Installing Biralo Dependencies...${RESET}"
-
-# Install required packages with spinner
-(
-  sudo apt update -y >/dev/null 2>&1
-  sudo apt install -y figlet curl git python3 python3-pip >/dev/null 2>&1
-) &
-
-pid=$!
-spinner="/|\\-/|\\-"
-i=0
-while kill -0 $pid 2>/dev/null; do
-  printf "\r${CYAN}Installing dependencies ${spinner:$i:1}${RESET}"
-  i=$(( (i+1) %8 ))
-  sleep 0.1
-done
-wait $pid
-
-echo -e "\r${GREEN}✔ Dependencies installed successfully!${RESET}"
 
 # Clone repo
-slow_print "${CYAN}📁 Cloning Biralo repository...${RESET}"
-if git clone https://github.com/PowerEdgeR710/discord-vps-creator.git; then
-  cd discord-vps-creator || { echo -e "${RED}❌ Failed to enter project folder.${RESET}"; exit 1; }
-else
-  echo -e "${RED}❌ Failed to clone repository.${RESET}"
-  exit 1
+echo -e "\n${CYAN}Cloning project...${RESET}"
+git clone https://github.com/PowerEdgeR710/discord-vps-creator.git >/dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Failed to clone repo.${RESET}"
+    exit 1
 fi
 
-# Ask for bot token
-echo -ne "\n${YELLOW}${BOLD}🤖 Enter your Discord Bot Token: ${RESET}"
-read -sr BOT_TOKEN
-echo ""
+cd discord-vps-creator || { echo -e "${RED}❌ Couldn't enter folder.${RESET}"; exit 1; }
 
-# Insert token into v2.py
+# Ask for token
+echo -ne "\n${YELLOW}Enter your Discord Bot Token: ${RESET}"
+read -r BOT_TOKEN
+
+# Inject into v2.py
 if grep -q "^TOKEN=" v2.py; then
-  sed -i "s|^TOKEN=.*|TOKEN='$BOT_TOKEN'|" v2.py
+    sed -i "s|^TOKEN=.*|TOKEN='$BOT_TOKEN'|" v2.py
 else
-  echo "TOKEN='$BOT_TOKEN'" >> v2.py
+    echo "TOKEN='$BOT_TOKEN'" >> v2.py
 fi
 
-# Final message and run bot
-slow_print "${GREEN}${BOLD}\n✅ Biralo setup complete! Starting the bot...${RESET}"
-echo ""
-
-# Run the bot
+# Done, run it
+echo -e "\n${GREEN}✅ All done! Starting Biralo bot now...${RESET}"
+sleep 1
 python3 v2.py
-
-# Friendly exit
-echo -e "\n${MAGENTA}Thanks for using Biralo! 🚀 Enjoy your VPS bot.${RESET}"
